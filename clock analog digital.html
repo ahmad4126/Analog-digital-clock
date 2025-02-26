@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numbered Analog Clock</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .clock {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border: 4px solid white;
+            border-radius: 50%;
+        }
+        .hand {
+            position: absolute;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform-origin: center;
+        }
+        .hand span {
+            font-size: 18px;
+            font-weight: bold;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+        .hour-hand { color: red; }
+        .minute-hand { color: green; }
+        .second-hand { color: blue; }
+        .center {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <div class="hand second-hand" id="second-hand"></div>
+        <div class="hand minute-hand" id="minute-hand"></div>
+        <div class="hand hour-hand" id="hour-hand"></div>
+        <div class="center"></div>
+    </div>
+
+    <script>
+        // Adjustable spacing factors (in pixels)
+        const hourSpacing = 22;  // Space between numbers on hour hand
+        const minuteSpacing = 22; // Space between numbers on minute hand
+        const secondSpacing = 22; // Space between numbers on second hand
+
+        function updateClock() {
+            const now = new Date();
+            let hour = now.getHours();
+            let minute = now.getMinutes();
+            let second = now.getSeconds();
+
+            function createHandElements(hand, value, count, spacing) {
+                hand.innerHTML = "";
+                hand.style.position = "absolute";
+                hand.style.width = "0px";
+                hand.style.height = "0px";
+                hand.style.top = "50%";
+                hand.style.left = "50%";
+                hand.style.transformOrigin = "50% 50%";
+
+                for (let i = 0; i < count; i++) {
+                    let span = document.createElement("span");
+                    span.textContent = value;
+                    let distance = spacing * (i + 1);
+                    let angleRad = ((value % 60) / 60) * (2 * Math.PI) - Math.PI / 2; // Convert time to clock position
+                    span.style.left = `${Math.cos(angleRad) * distance}px`;
+                    span.style.top = `${Math.sin(angleRad) * distance}px`;
+                    hand.appendChild(span);
+                }
+            }
+
+            const hourHand = document.getElementById("hour-hand");
+            const minuteHand = document.getElementById("minute-hand");
+            const secondHand = document.getElementById("second-hand");
+
+            createHandElements(hourHand, hour, 3, hourSpacing);
+            createHandElements(minuteHand, minute, 4, minuteSpacing);
+            createHandElements(secondHand, second, 6, secondSpacing);
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
