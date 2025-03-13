@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numbered Analog Clock</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .clock {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border: 6px solid;
+            border-radius: 50%;
+            animation: rainbowBorder 10s linear infinite;
+        }
+        .hand {
+            position: absolute;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform-origin: center;
+        }
+        .hand span {
+            font-size: 18px;
+            font-weight: bold;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+        .center {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            animation: rainbowDot 3s linear infinite;
+        }
+        .hour-markers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+        .hour-marker {
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Rainbow animations */
+        @keyframes rainbowBorder {
+            0% { border-color: red; }
+            14% { border-color: orange; }
+            28% { border-color: yellow; }
+            42% { border-color: green; }
+            57% { border-color: cyan; }
+            71% { border-color: blue; }
+            85% { border-color: violet; }
+            100% { border-color: red; }
+        }
+        @keyframes rainbowDot {
+            0% { background: red; }
+            14% { background: orange; }
+            28% { background: yellow; }
+            42% { background: green; }
+            57% { background: cyan; }
+            71% { background: blue; }
+            85% { background: violet; }
+            100% { background: red; }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <div class="hour-markers" id="hour-markers"></div>
+        <div class="hand" id="hour-hand"></div>
+        <div class="hand" id="minute-hand"></div>
+        <div class="hand" id="second-hand"></div>
+        <div class="center"></div>
+    </div>
+
+    <script>
+        // Adjustable Spacing Factors (in pixels)
+        const hourSpacing = 22;
+        const minuteSpacing = 22;
+        const secondSpacing = 22;
+
+        function createHourMarkers() {
+            const markersContainer = document.getElementById("hour-markers");
+            const radius = 45; // Adjusted for correct placement inside the circle
+
+            for (let i = 1; i <= 12; i++) {
+                let marker = document.createElement("div");
+                marker.className = "hour-marker";
+                marker.textContent = i;
+                marker.id = `hour-marker-${i}`;
+                
+                // Corrected positioning using trigonometry
+                let angleRad = ((i / 12) * (2 * Math.PI)) - Math.PI / 2;
+                let x = 50 + Math.cos(angleRad) * radius;
+                let y = 50 + Math.sin(angleRad) * radius;
+                
+                marker.style.left = `${x}%`;
+                marker.style.top = `${y}%`;
+                
+                markersContainer.appendChild(marker);
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            let hour = now.getHours() % 12;
+            let minute = now.getMinutes();
+            let second = now.getSeconds();
+            let millisecond = now.getMilliseconds();
+
+            // Smooth transitions for seconds, minutes, and hours
+            let smoothSecond = second + millisecond / 1000;
+            let smoothMinute = minute + smoothSecond / 60;
+            let smoothHour = hour + smoothMinute / 60;
+
+            // Color transition logic (0° to 360° hue shift over 60 seconds)
+            let hueBase = (smoothSecond / 60) * 360;
+            let hourHue = (hueBase + 0) % 360;
+            let minuteHue = (hueBase + 120) % 360;
+            let secondHue = (hueBase + 240) % 360;
+
+            function createHandElements(hand, value, count, spacing, maxValue, color) {
+                hand.innerHTML = "";
+                hand.style.position = "absolute";
+                hand.style.width = "0px";
+                hand.style.height = "0px";
+                hand.style.top = "50%";
+                hand.style.left = "50%";
+                hand.style.transformOrigin = "50% 50%";
+                hand.style.color = `hsl(${color}, 100%, 50%)`;
+
+                for (let i = 0; i < count; i++) {
+                    let span = document.createElement("span");
+                    span.textContent = Math.floor(value); // Update numbers only on whole seconds
+                    let distance = spacing * (i + 1);
+                    let angleRad = ((value % maxValue) / maxValue) * (2 * Math.PI) - Math.PI / 2;
+                    span.style.left = `${Math.cos(angleRad) * distance}px`;
+                    span.style.top = `${Math.sin(angleRad) * distance}px`;
+                    hand.appendChild(span);
+                }
+            }
+
+            const hourHand = document.getElementById("hour-hand");
+            const minuteHand = document.getElementById("minute-hand");
+            const secondHand = document.getElementById("second-hand");
+
+            createHandElements(hourHand, smoothHour, 3, hourSpacing, 12, hourHue);
+            createHandElements(minuteHand, smoothMinute, 4, minuteSpacing, 60, minuteHue);
+            createHandElements(secondHand, smoothSecond, 5, secondSpacing, 60, secondHue);
+
+            // Update hour marker colors smoothly
+            for (let i = 1; i <= 12; i++) {
+                let marker = document.getElementById(`hour-marker-${i}`);
+                let markerHue = (hueBase + (i - 1) * 30) % 360; // Spacing colors evenly around the circle
+                marker.style.color = `hsl(${markerHue}, 100%, 50%)`;
+            }
+
+            requestAnimationFrame(updateClock); // Smooth animation
+        }
+
+        createHourMarkers(); // Create hour markers once
+        updateClock(); // Start the clock
+    </script>
+</body>
+</html>
